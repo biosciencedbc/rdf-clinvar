@@ -23,7 +23,7 @@ cd ${BASE_DIR}
 if [ -d ${WORK_DIR} ]; then
 
 	# check if md5file exists 
-        wget --spider ${XML_URL}.md5
+        wget --spider -q ${XML_URL}.md5
         md5_exist=$?
         if [ ${md5_exist} = 0 ];then
                 cd ${WORK_DIR}
@@ -34,7 +34,8 @@ if [ -d ${WORK_DIR} ]; then
 
                 # check for new data
                 if [ ${is_update} = 0 ]; then
-                        echo "have already latest version"
+                        rm -rf ${FILE_TEMPLATE}.xml.gz.md5
+			echo "have already latest version"
                         exit 0
                 else
                         echo "new data exist"
@@ -51,9 +52,9 @@ fi
 
 
 # check if data exists
-wget --spider ${XSD_URL}
+wget --spider -q ${XSD_URL}
 xsd_exist=$?
-wget --spider ${XML_URL}
+wget --spider -q ${XML_URL}
 xml_exist=$?
 if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
 
@@ -72,18 +73,13 @@ if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
 
         echo "complete split . convert into rdf"
         ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P10 -I{} bash -c "f={}; zcat \${f} | /docker-entrypoint.sh convert --xsd $(ls *.xsd) 2>\${f%%.*}.log | gzip -c >\${f%%.*}.ttl.gz"
-        echo "complete convert"
+        rm ${FILE_TEMPLATE}_*.xml.gz && rm *.log
+	cd ../ && chmod -R 777 ./
+	echo "complete convert"
 
 else
         echo "clinvar data not found"
         exit 1
 fi
-
-
-
-
-
-
-
 
 
