@@ -1,0 +1,85 @@
+#!/bin/bash
+
+##
+# make clinvar rdf data
+##
+
+
+##
+# Property
+##
+BASE_DIR=/data
+WORK_DIR=./clinvar_latest
+XSD_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/clinvar_variation/variation_archive.xsd
+XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/ClinVarVariationRelease_00-latest.xml.gz
+BASE_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/
+TEMP_HTML=clinvar.html
+FILE_TEMPLATE=ClinVarVariationRelease_00-latest
+
+
+cd ${BASE_DIR}
+
+# check if last data exisits
+if [ -d ${WORK_DIR} ]; then
+
+	# check if md5file exists 
+        wget --spider -q ${XML_URL}.md5
+        md5_exist=$?
+        if [ ${md5_exist} = 0 ];then
+                cd ${WORK_DIR}
+                test -e ${FILE_TEMPLATE}.xml.gz.md5 && rm ${FILE_TEMPLATE}.xml.gz.md5
+                wget -q ${XML_URL}.md5
+                md5sum ${FILE_TEMPLATE}.xml.gz && md5sum -c ${FILE_TEMPLATE}.xml.gz.md5
+                is_update=$?
+
+                # check for new data
+                if [ ${is_update} = 0 ]; then
+                        rm -rf ${FILE_TEMPLATE}.xml.gz.md5
+			echo "have already latest version"
+                        exit 0
+                else
+                        echo "new data exist"
+			echo "perform update "
+                        cd ../
+                fi
+
+        else
+                echo "MD5 file not found"
+                exit 1
+        fi
+fi
+
+
+
+# check if data exists
+wget --spider -q ${XSD_URL}
+xsd_exist=$?
+wget --spider -q ${XML_URL}
+xml_exist=$?
+if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
+
+        # remove last data
+        test -d ${WORK_DIR} && rm -rf ${WORK_DIR}
+
+        # make directry and file download
+        mkdir ${WORK_DIR}
+        cd ${WORK_DIR}
+	echo "download XML and XSD files"
+        wget -q ${XSD_URL}
+        wget -q ${XML_URL}
+
+        echo "excute split"
+        /clinvar-rdf/bin/split ${FILE_TEMPLATE}.xml.gz
+
+        echo "complete split . convert into rdf"
+        ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P10 -I{} bash -c "f={}; zcat \${f} | /docker-entrypoint.sh convert --xsd $(ls *.xsd) 2>\${f%%.*}.log | gzip -c >\${f%%.*}.ttl.gz"
+        rm ${FILE_TEMPLATE}_*.xml.gz && rm *.log
+	cd ../ && chmod -R 777 ./
+	echo "complete convert"
+
+else
+        echo "clinvar data not found"
+        exit 1
+fi
+
+

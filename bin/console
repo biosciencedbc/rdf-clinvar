@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'clinvar/rdf'
+
+require 'pry'
+Pry.config.history.file = 'tmp/pry_history'
+Pry.start(__FILE__)
