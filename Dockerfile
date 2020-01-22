@@ -1,19 +1,19 @@
 FROM ruby:2.5
 
+RUN mkdir /work
+
 RUN apt-get update && \
     apt-get install -y libraptor2-0 && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/list/*
 
-ADD . /clinvar-rdf/
+ADD ./clinvar /clinvar-rdf/
+ADD ./convert_clinvar /
 
 RUN cd /clinvar-rdf && \
     bundle install && \
     rake install
 
-COPY docker-entrypoint.sh /
-
 WORKDIR /data
 
-ENV PATH $PATH:/clinvar-rdf/bin
+CMD /convert_clinvar
 
-CMD convert_clinvar

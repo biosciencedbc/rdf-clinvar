@@ -13,4 +13,7 @@ $ docker build --tag rdf-clinvar .
 ``` 
 
 ## Execution
-$ docker run --rm -v $(pwd):/data rdf-clinvar
+$ docker run --rm -v [WORK]:/work -v [DATA]:/data rdf-clinvar
+[WORK]: Download file location
+[DATA]: Converted file location
+
