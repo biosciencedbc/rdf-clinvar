@@ -66,7 +66,7 @@ if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
 
         #echo "complete split . convert into rdf"
         ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P10 -I{} bash -c "f={}; zcat \${f} | /clinvar-rdf/docker-entrypoint.sh convert --xsd $(ls /work/*.xsd) 2>\${f%%.*}.log | gzip -c >\${f%%.*}.ttl.gz"
-        rm ${FILE_TEMPLATE}_*.xml.gz && rm *.log 
+        rm ${FILE_TEMPLATE}_*.xml.gz && rm ${FILE_TEMPLATE}*.log 
 
 	chmod 777 $(ls) 
 
