@@ -4,7 +4,7 @@ RUN mkdir /work
 
 RUN apt-get update && \
     apt-get install -y libraptor2-0 && \
-    rm -rf /var/lib/apt/list/*
+    rm -rf /var/lib/apt/lists/*
 
 ADD ./clinvar /clinvar-rdf/
 ADD ./convert_clinvar /
