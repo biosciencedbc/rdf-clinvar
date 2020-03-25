@@ -12,7 +12,7 @@ ClinVar XML to RDF Converter
 $ docker build --tag rdf-clinvar .
 ``` 
 
-## Execution
+## Run
 ```bash
 $ docker run --rm -v [WORK]:/work -v [DATA]:/data rdf-clinvar
 ``` 
