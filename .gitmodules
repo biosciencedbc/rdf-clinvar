@@ -1,3 +1,0 @@
-[submodule "clinvar"]
-	path = clinvar
-	url = https://github.com/med2rdf/clinvar.git
