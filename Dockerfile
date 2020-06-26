@@ -18,5 +18,5 @@ RUN cd /clinvar-rdf && \
 
 WORKDIR /data
 
-CMD /convert_clinvar
+ENTRYPOINT [ "/convert_clinvar" ]
 
