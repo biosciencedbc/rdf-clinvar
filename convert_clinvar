@@ -15,12 +15,23 @@ XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/ClinVarVa
 BASE_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/
 TEMP_HTML=clinvar.html
 FILE_TEMPLATE=ClinVarVariationRelease_00-latest
+FORCE_CONVERT=0
+
+# read options
+while getopts f OPT
+do
+  case $OPT in
+    f)  FORCE_CONVERT=1
+        ;;
+  esac
+done
+shift  $(($OPTIND - 1))
 
 
 cd ${WORK_DIR}
 
 # check if last data exisits
-if [ -e ${FILE_TEMPLATE}.xml.gz  ]; then
+if [ -e ${FILE_TEMPLATE}.xml.gz ]; then
 
 	# check if md5file exists 
         wget --spider -q ${XML_URL}.md5 2> /dev/stdout
@@ -32,7 +43,7 @@ if [ -e ${FILE_TEMPLATE}.xml.gz  ]; then
                 is_update=$?
 
                 # check for new data
-                if [ ${is_update} = 0 ]; then
+                if [ ${is_update} = 0 ] && [ $FORCE_CONVERT -eq 0 ]; then
                         rm -rf ${FILE_TEMPLATE}.xml.gz.md5
 			echo "have already latest version"
                         exit 0
@@ -59,6 +70,7 @@ if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
 	#echo "download XML and XSD files"
         wget  ${XSD_URL} 2> /dev/stdout
         wget  ${XML_URL} 2> /dev/stdout
+        chmod 666 $(ls)
 
 	cd ${BASE_DIR}
         #echo "excute split"
@@ -68,7 +80,7 @@ if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
         ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P10 -I{} bash -c "f={}; zcat \${f} | /clinvar-rdf/docker-entrypoint.sh convert --xsd $(ls /work/*.xsd) 2>\${f%%.*}.log | gzip -c >\${f%%.*}.ttl.gz"
         rm ${FILE_TEMPLATE}_*.xml.gz && rm ${FILE_TEMPLATE}*.log 
 
-	chmod 777 $(ls) 
+	chmod 666 $(ls) 
 
 else
         echo "clinvar data not found" >&2
