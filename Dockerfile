@@ -1,4 +1,6 @@
 FROM ruby:2.5
+#  https://blog.sshn.me/posts/invalid-byte-sequence-in-usascii/ 
+ENV RUBYOPT -EUTF-8
 
 RUN mkdir /work && mkdir /data
 
