@@ -12,16 +12,18 @@ BASE_DIR=/data
 WORK_DIR=/work
 XSD_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/clinvar_variation/variation_archive.xsd
 XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/ClinVarVariationRelease_00-latest.xml.gz
-BASE_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/
-TEMP_HTML=clinvar.html
 FILE_TEMPLATE=ClinVarVariationRelease_00-latest
+
 FORCE_CONVERT=0
+NUM_PARALLEL=1
 
 # read options
-while getopts f OPT
+while getopts fP: OPT
 do
   case $OPT in
     f)  FORCE_CONVERT=1
+        ;;
+    P)  NUM_PARALLEL=$OPTARG
         ;;
   esac
 done
@@ -30,60 +32,37 @@ shift  $(($OPTIND - 1))
 
 cd ${WORK_DIR}
 
-# check if last data exisits
-if [ -e ${FILE_TEMPLATE}.xml.gz ]; then
+#echo "download XML and XSD files"
 
-	# check if md5file exists 
-        wget --spider -q ${XML_URL}.md5 2> /dev/stdout
-        md5_exist=$?
-        if [ ${md5_exist} = 0 ];then
-                test -e ${FILE_TEMPLATE}.xml.gz.md5 && rm ${FILE_TEMPLATE}.xml.gz.md5
-                wget -q ${XML_URL}.md5 2> /dev/stdout
-                md5sum ${FILE_TEMPLATE}.xml.gz && md5sum -c ${FILE_TEMPLATE}.xml.gz.md5
-                is_update=$?
+now=`date "+%Y%m%d-%H%M%S"`
+echo "Started wget at $now"
 
-                # check for new data
-                if [ ${is_update} = 0 ] && [ $FORCE_CONVERT -eq 0 ]; then
-                        rm -rf ${FILE_TEMPLATE}.xml.gz.md5
-			echo "have already latest version"
-                        exit 0
-                else
-                	rm -rf ${FILE_TEMPLATE}.xml.gz.md5
-			rm -rf ${FILE_TEMPLATE}.xml.gz
-                fi
+wget -N ${XSD_URL} 2> /wget.log
+wget -N ${XML_URL} 2> /wget.log
 
-        else
-                echo "MD5 file not found" >&2
-                exit 1
-        fi
+now=`date "+%Y%m%d-%H%M%S"`
+echo "Finished wget at $now"
+chmod 666 $(ls)
+cat /wget.log > /dev/stdout
+
+num_of_newfiles=`egrep "' saved \[[0-9]+\]" /wget.log | grep -v "'.listing' saved" | wc -l `
+
+if [ $num_of_newfiles -eq 0 ] && [ $FORCE_CONVERT -eq 0 ]; then
+  echo
+  echo "No RDF files were generated because no new files were found at the download site."
+  exit 0
 fi
 
 
+now=`date "+%Y%m%d-%H%M%S"`
 
-# check if data exists
-wget --spider -q ${XSD_URL} 2> /dev/stdout
-xsd_exist=$?
-wget --spider -q ${XML_URL} 2> /dev/stdout
-xml_exist=$?
-if [ ${xsd_exist} = 0 -a ${xml_exist} = 0 ]; then
+echo "Started convert at $now"
+cd /tmp && /clinvar-rdf/bin/split ${WORK_DIR}/${FILE_TEMPLATE}.xml.gz
+ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P${NUM_PARALLEL} -I{} bash -c "f={}; zcat \${f} | /clinvar-rdf/docker-entrypoint.sh convert --xsd $(ls /work/*.xsd) 2>/log/\${f%%.*}.log | gzip -c >${BASE_DIR}/\${f%%.*}.ttl.gz"
 
-	#echo "download XML and XSD files"
-        wget  ${XSD_URL} 2> /dev/stdout
-        wget  ${XML_URL} 2> /dev/stdout
-        chmod 666 $(ls)
+grep -rnve "W" /log | grep -v "XML" > /dev/stderr
 
-	cd ${BASE_DIR}
-        #echo "excute split"
-        /clinvar-rdf/bin/split ${WORK_DIR}/${FILE_TEMPLATE}.xml.gz
-
-        #echo "complete split . convert into rdf"
-        ls ${FILE_TEMPLATE}_*.xml.gz | xargs -n1 -P10 -I{} bash -c "f={}; zcat \${f} | /clinvar-rdf/docker-entrypoint.sh convert --xsd $(ls /work/*.xsd) 2>\${f%%.*}.log | gzip -c >\${f%%.*}.ttl.gz"
-        rm ${FILE_TEMPLATE}_*.xml.gz && rm ${FILE_TEMPLATE}*.log 
-
-	chmod 666 $(ls) 
-
-else
-        echo "clinvar data not found" >&2
-        exit 1
-fi
+cd ${BASE_DIR} && chmod 666 $(ls) 
+now=`date "+%Y%m%d-%H%M%S"`
+echo "Finished convert at $now"
 

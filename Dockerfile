@@ -2,7 +2,7 @@ FROM ruby:2.5
 #  https://blog.sshn.me/posts/invalid-byte-sequence-in-usascii/ 
 ENV RUBYOPT -EUTF-8
 
-RUN mkdir /work && mkdir /data
+RUN mkdir /work /data /log
 
 RUN apt-get update && \
     apt-get install -y libraptor2-0 && \
