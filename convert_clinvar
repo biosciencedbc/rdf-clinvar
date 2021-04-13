@@ -38,7 +38,15 @@ now=`date "+%Y%m%d-%H%M%S"`
 echo "Started wget at $now"
 
 wget -N ${XSD_URL} 2> /wget.log
+isSuccess_xsd=$?
 wget -N ${XML_URL} 2>> /wget.log
+isSuccess_xml=$? 
+
+if [ ! $isSuccess_xsd -eq 0 ] || [ ! $isSuccess_xml -eq 0 ]; then
+  echo "ファイルのダウンロードに失敗しました" > dev/stderr
+  rm clinvar_variation/variation_archive.xsd ClinVarVariationRelease_00-latest.xml.gz
+  exit 1
+fi
 
 now=`date "+%Y%m%d-%H%M%S"`
 echo "Finished wget at $now"
