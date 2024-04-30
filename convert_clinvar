@@ -10,9 +10,9 @@
 ##
 BASE_DIR=/data
 WORK_DIR=/work
-XSD_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/VCV_xsd_old_format/variation_archive.xsd
-XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/VCV_xml_old_format/ClinVarVariationRelease_00-latest.xml.gz
-FILE_TEMPLATE=ClinVarVariationRelease_00-latest
+XSD_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/ClinVar_VCV_2.0.xsd
+XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarVCVRelease_00-latest.xml.gz
+FILE_TEMPLATE=ClinVarVCVRelease_00-latest
 
 FORCE_CONVERT=0
 NUM_PARALLEL=1
