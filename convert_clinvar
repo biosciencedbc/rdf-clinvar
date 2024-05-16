@@ -14,7 +14,7 @@ XSD_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xsd_public/ClinVar_VCV_2.0.xsd
 XML_URL=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarVCVRelease_00-latest.xml.gz
 FILE_TEMPLATE=ClinVarVCVRelease_00-latest
 
-FORCE_CONVERT=0
+FORCE_CONVERT=1
 NUM_PARALLEL=1
 
 # read options
@@ -44,7 +44,7 @@ isSuccess_xml=$?
 
 if [ ! $isSuccess_xsd -eq 0 ] || [ ! $isSuccess_xml -eq 0 ]; then
   echo "ファイルのダウンロードに失敗しました" > dev/stderr
-  rm clinvar_variation/variation_archive.xsd ClinVarVariationRelease_00-latest.xml.gz
+  rm -f clinvar_variation/variation_archive.xsd ClinVarVariationRelease_00-latest.xml.gz
   exit 1
 fi
 
